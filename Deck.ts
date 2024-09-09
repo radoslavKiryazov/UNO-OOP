@@ -1,10 +1,11 @@
 import {Card, cardPrinter, CardType, Colour} from './Card'
 
 interface Deck {
-    cards: Card[],
-    playedCards: Card[],
     shuffle: () => void;
     drawCard: () => Card | undefined;
+    //getPlayedCards: () => Card[];
+    getCards: () => Card[];
+
 }
 
 const createDeck = (): Deck => {
@@ -42,12 +43,14 @@ const createDeck = (): Deck => {
         }
     }
 
-    return {cards: preparedDeck, playedCards: [], shuffle: () => {}, drawCard};
+    const getCards = () => [...preparedDeck];
+
+    return {shuffle: () => {}, drawCard, getCards: getCards};
 }
 
 const deck = createDeck();
-console.log(deck.cards);
-console.log(deck.cards.length) //104 missing the wildcards
+console.log(deck.getCards());
+console.log(deck.getCards().length) //104 missing the wildcards
 
 
 
