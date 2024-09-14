@@ -1,4 +1,5 @@
 import {Card, CardType, Colour} from './Card'
+import { standardShuffler } from '../utils/random_utils';
 
 export interface Deck {
     /**
@@ -48,10 +49,7 @@ export const createDeck = (): Deck => {
     }
 
     const shuffle = () => {
-        for (let i = preparedDeck.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [preparedDeck[i], preparedDeck[j]] = [preparedDeck[j], preparedDeck[i]];
-        }
+        return standardShuffler(preparedDeck);
     };
 
     const deal = (numberOfCards: number): Card[] => {
