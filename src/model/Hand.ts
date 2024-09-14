@@ -5,7 +5,6 @@ interface Player {
     score: number;
 }
 
-
 interface PlayerHand {
     playCard: () => void;
     drawCard: () => void;
