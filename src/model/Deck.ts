@@ -6,13 +6,13 @@ export interface Deck {
      * Shuffle the deck.
      */
     readonly shuffle: () => void;
-    deal: (numberOfCards: number) => Card[];
-    discardCard: (card: Card) => void;
-    getDiscardPile: () => Card[];
-    getTopCardOfDiscardPile: () => Card | undefined
-    getCards: () => Card[];
-    getDeckSize: () => number;
-    colors: Colour[];
+    readonly deal: (numberOfCards: number) => Card[];
+    readonly discardCard: (card: Card) => void;
+    readonly getDiscardPile: () => Card[];
+    readonly getTopCardOfDiscardPile: () => Card | undefined
+    readonly getCards: () => Card[];
+    readonly getDeckSize: () => number;
+    readonly colors: Colour[];
 }
 
 export const createDeck = (): Deck => {
