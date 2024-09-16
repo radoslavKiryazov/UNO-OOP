@@ -1,6 +1,6 @@
 import { Player, createPlayer } from "./Player";
 import { Hand, createHand } from "./Hand";
-import { createDeck } from "./Deck";
+import { delay } from "../utils/random_utils";
 
 export type Game = {
   players: Player[];
@@ -16,9 +16,8 @@ export const createGame = (players: Player[], targetScore = 500): Game => {
   let currentHand: Hand | null = null;
 
   const startNewHand = (): void => {
-    console.log("\n--- A new hand begins! ---");
+    console.log("\n--- A new hand begins! ---\n");
     currentHand = createHand(players);
-    console.log(currentHand.discardPile);
   };
 
   const updateScores = () => {
@@ -46,6 +45,7 @@ export const createGame = (players: Player[], targetScore = 500): Game => {
   const getCurrentHand = (): Hand | null => {
     return currentHand;
   };
+
   return {
     players,
     getCurrentHand,

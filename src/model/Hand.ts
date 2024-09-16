@@ -1,4 +1,4 @@
-import { Card } from "./Card";
+import { Card, cardPrinter } from "./Card";
 import { createDeck } from "./Deck";
 import { Player } from "./Player";
 import { questionInt } from "readline-sync";
@@ -6,7 +6,7 @@ import { questionInt } from "readline-sync";
 export type Hand = {
   readonly discardPile: Card[];
   readonly currentTurnIndex: number;
-  playCard: (playerIndex: number, cardIndex: number) => void;
+  playCard: (card: Card, hand: Card[]) => void; //super messy, I shouldnt be passing the entire hand with a seperate card just to check and remove it TODO
   drawCard: (player: Player) => void;
   checkForUNO: (playerIndex: number) => void;
   nextTurn: () => void;
@@ -19,7 +19,7 @@ export const createHand = (players: Player[]): Hand => {
   const deck = createDeck();
   deck.shuffle();
 
-  console.log("Dealing 7 cards to each player...");
+  console.log("Dealing 7 cards to each player...\n");
 
   players.forEach((player) => {
     player.hand = deck.deal(7);
@@ -28,34 +28,41 @@ export const createHand = (players: Player[]): Hand => {
   let discardPile: Card[] = [deck.discardTopCard()];
   let currentTurnIndex: number = 0;
 
-  console.log(
-    `Starting card is ${discardPile[0].colour} ${discardPile[0].type}`
-  );
-  console.log(`${players[currentTurnIndex].name}'s turn`);
-
-  const playCard = (playerIndex: number) => {
-    const player = players[playerIndex];
-    const { hand } = player;
-
-    console.log("Your hand:");
-    hand.forEach((card, index) => {
-      console.log(`${index}: ${card.colour} ${card.type}`);
-    });
-    console.log(`Top card on the discard pile: ${discardPile[length - 1]}`);
-
-    let input = questionInt("Select a card index to play");
-
-    const selectedCard = hand[input];
+  const playCard = async (selectedCard: Card, hand: Card[]) => {
+    const player = players[currentTurnIndex]; // Get the current player
 
     if (canPlayCard(selectedCard)) {
       discardPile.push(selectedCard);
-      player.hand.filter((c) => c !== selectedCard);
-      console.log(`${player.name} played ${selectedCard}`);
+      player.hand = hand.filter((c) => c !== selectedCard);
+      console.log("Card that was played:", cardPrinter(selectedCard));
       nextTurn();
-      if (player.hand.length === 0) {
-        endHand();
-      }
+    } else {
+      console.log("Invalid card. Try again.");
+      selectCardToPlay(currentTurnIndex);
     }
+  };
+  const selectCardToPlay = (playerIndex: number) => {
+    const player = players[playerIndex];
+    const { hand } = player;
+
+    console.log("\n");
+    console.log("\n");
+    console.log("\n");
+    console.log(`${player.name}, it's your turn!\n`);
+
+    console.log(
+      `Top card on the discard pile: ${cardPrinter(
+        discardPile[discardPile.length - 1]
+      )}`
+    );
+    console.log("Your hand: =>");
+    hand.forEach((card, index) => {
+      console.log(cardPrinter(card, index + 1));
+    });
+
+    let input = questionInt("Select a card index to play: ");
+    const card = hand[input - 1];
+    playCard(card, hand);
   };
   const drawCard = (player: Player) => {
     const card = deck.deal(1)[0];
@@ -76,9 +83,8 @@ export const createHand = (players: Player[]): Hand => {
   };
 
   const nextTurn = () => {
-    console.log("currentTurnIndex", currentTurnIndex);
     currentTurnIndex = (currentTurnIndex + 1) % players.length;
-    console.log(`Next turn: ${players[currentTurnIndex].name}`);
+    selectCardToPlay(currentTurnIndex);
   };
 
   const checkForUNO = (playerIndex: number) => {

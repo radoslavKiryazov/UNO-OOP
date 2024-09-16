@@ -13,9 +13,10 @@ const startGame = () => {
 
   // Initialize the first hand
   game.startNewHand();
-  game.getCurrentHand()?.nextTurn();
-  game.getCurrentHand()?.nextTurn();
-  game.getCurrentHand()?.nextTurn();
+  while (!game.getCurrentHand()?.isHandOver()) {
+    game.getCurrentHand()?.nextTurn();
+  }
+  console.log("Hand over!");
 };
 
 // Run the game simulation

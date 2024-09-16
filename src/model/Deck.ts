@@ -1,5 +1,5 @@
 import { Card, CardType, Colour } from "./Card";
-import { standardShuffler } from "../utils/random_utils";
+import { announce, standardShuffler, delay } from "../utils/random_utils";
 
 export const colors: Array<Colour> = ["Red", "Blue", "Green", "Yellow"];
 export type Deck = {
@@ -43,6 +43,7 @@ export const createDeck = (): Deck => {
   }
 
   const shuffle = () => {
+    console.log(announce("Shuffling the deck..."));
     return standardShuffler(preparedDeck);
   };
 
