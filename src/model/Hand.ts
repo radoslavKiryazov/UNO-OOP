@@ -1,4 +1,4 @@
-import { Card, cardPrinter } from "./Card";
+import { Card, cardPrinter, Colour } from "./Card";
 import { createDeck } from "./Deck";
 import { Player } from "./Player";
 import { questionInt } from "readline-sync";
@@ -7,7 +7,7 @@ export type Hand = {
   readonly discardPile: Card[];
   readonly currentTurnIndex: number;
   playCard: (card: Card, hand: Card[]) => void; //super messy, I shouldnt be passing the entire hand with a seperate card just to check and remove it TODO
-  drawCard: (player: Player) => void;
+  drawCards: (player: Player, numberOfCards: number) => void;
   checkForUNO: (playerIndex: number) => void;
   nextTurn: () => void;
   endHand: () => void;
@@ -32,6 +32,34 @@ export const createHand = (players: Player[]): Hand => {
     const player = players[currentTurnIndex]; // Get the current player
 
     if (canPlayCard(selectedCard)) {
+      if (
+        selectedCard.type === "WILD" ||
+        selectedCard.type === "WILDDRAWFOUR"
+      ) {
+        const newColour: Colour = selectColour();
+
+        selectedCard = { ...selectedCard, colour: newColour };
+        console.log(`You selected ${newColour}!`);
+      }
+
+      if (selectedCard.type === "DRAWTWO") {
+        console.log(`${player.name} played a Draw Two!`);
+        discardPile.push(selectedCard);
+        player.hand = hand.filter((c) => c !== selectedCard);
+
+        // Force the next player to draw two cards and skip their turn
+        const nextPlayerIndex = (currentTurnIndex + 1) % players.length;
+        const nextPlayer = players[nextPlayerIndex];
+
+        console.log(`${nextPlayer.name} must draw two cards!`);
+        drawCards(nextPlayer, 2); // Draw two cards
+        console.log(
+          `${nextPlayer.name} has drawn two cards and their turn is skipped!`
+        );
+
+        // Skip the next player's turn and move to the following player
+        currentTurnIndex = (nextPlayerIndex + 1) % players.length;
+      }
       discardPile.push(selectedCard);
       player.hand = hand.filter((c) => c !== selectedCard);
       console.log("Card that was played:", cardPrinter(selectedCard));
@@ -55,18 +83,26 @@ export const createHand = (players: Player[]): Hand => {
         discardPile[discardPile.length - 1]
       )}`
     );
-    console.log("Your hand: =>");
-    hand.forEach((card, index) => {
-      console.log(cardPrinter(card, index + 1));
-    });
+
+    printPlayersHand(hand);
+
+    const isThereAPlayableCard = hand.some((card) => canPlayCard(card));
+    if (!isThereAPlayableCard) {
+      forceDrawUntilPlayable(hand, player);
+    }
 
     let input = questionInt("Select a card index to play: ");
     const card = hand[input - 1];
     playCard(card, hand);
   };
-  const drawCard = (player: Player) => {
-    const card = deck.deal(1)[0];
-    card && player.hand.push(card);
+
+  const drawCards = (player: Player, numberOfCards: number) => {
+    for (let i = 0; i < numberOfCards; i++) {
+      const card = deck.deal(1)[0];
+      if (card) {
+        player.hand.push(card);
+      }
+    }
   };
 
   const canPlayCard = (card: Card): boolean => {
@@ -103,10 +139,59 @@ export const createHand = (players: Player[]): Hand => {
   const isHandOver = (): boolean => {
     return players.some((player) => player.hand.length === 0);
   };
+
+  //helpers
+  const selectColour = () => {
+    console.log("Please choose a colour for the Wild Card!");
+    console.log("[1] Red");
+    console.log("[2] Blue");
+    console.log("[3] Green");
+    console.log("[4] Yellow");
+
+    const input = questionInt(
+      "Enter the number corresponding to your choice: "
+    );
+    switch (input) {
+      case 1:
+        return "Red";
+      case 2:
+        return "Blue";
+      case 3:
+        return "Green";
+      case 4:
+        return "Yellow";
+      default:
+        return "Blue";
+    }
+  };
+
+  const forceDrawUntilPlayable = (hand: Card[], player: Player) => {
+    let isPlayable = hand.some((card) => canPlayCard(card));
+
+    while (!isPlayable) {
+      console.log(`${player.name}, no playable cards! You must draw a card.`);
+      drawCards(player, 1);
+      console.log(
+        `You drew: ${cardPrinter(player.hand[player.hand.length - 1])}`
+      );
+
+      // Check the new hand after drawing
+      isPlayable = player.hand.some((card) => canPlayCard(card));
+
+      printPlayersHand(hand);
+    }
+  };
+
+  const printPlayersHand = (hand: Card[]): void => {
+    console.log("Your hand: =>");
+    hand.forEach((card, index) => {
+      console.log(cardPrinter(card, index + 1));
+    });
+  };
   return {
     checkForUNO,
     playCard,
-    drawCard,
+    drawCards,
     nextTurn,
     discardPile,
     currentTurnIndex,
