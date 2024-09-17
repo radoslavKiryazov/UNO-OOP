@@ -47,17 +47,15 @@ export const createHand = (players: Player[]): Hand => {
         discardPile.push(selectedCard);
         player.hand = hand.filter((c) => c !== selectedCard);
 
-        // Force the next player to draw two cards and skip their turn
         const nextPlayerIndex = (currentTurnIndex + 1) % players.length;
         const nextPlayer = players[nextPlayerIndex];
 
         console.log(`${nextPlayer.name} must draw two cards!`);
-        drawCards(nextPlayer, 2); // Draw two cards
+        drawCards(nextPlayer, 2);
         console.log(
           `${nextPlayer.name} has drawn two cards and their turn is skipped!`
         );
 
-        // Skip the next player's turn and move to the following player
         currentTurnIndex = (nextPlayerIndex + 1) % players.length;
       }
       discardPile.push(selectedCard);
