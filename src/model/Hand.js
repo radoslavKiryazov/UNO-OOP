@@ -79,8 +79,11 @@ var createHand = function (players) {
                     console.log("".concat(player.name, " played a Draw Two!"));
                     player.hand = hand.filter(function (c) { return c !== selectedCard; });
                     discardPile.push(selectedCard);
-                    nextPlayer = players[currentTurnIndex];
+                    nextPlayer = players[currentTurnIndex + 1 % players.length];
                     currentTurnIndex = (currentTurnIndex + 2) % players.length;
+                    console.log('currentTurnIndex', currentTurnIndex);
+                    console.log('currentPlayer', player);
+                    console.log('nextPlayer', nextPlayer);
                     console.log("".concat(nextPlayer.name, " must draw two cards!"));
                     drawCards(nextPlayer, 2);
                     console.log("".concat(nextPlayer.name, " has drawn two cards and their turn is skipped!"));

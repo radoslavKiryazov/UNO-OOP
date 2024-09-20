@@ -52,8 +52,12 @@ export const createHand = (players: Player[]): Hand => {
         player.hand = hand.filter((c) => c !== selectedCard);
         discardPile.push(selectedCard);
 
-        const nextPlayer = players[currentTurnIndex];
+        const nextPlayer = players[currentTurnIndex + 1 % players.length] ;
         currentTurnIndex = (currentTurnIndex + 2) % players.length;
+
+        console.log('currentTurnIndex', currentTurnIndex);
+        console.log('currentPlayer', player);
+        console.log('nextPlayer', nextPlayer);
 
         console.log(`${nextPlayer.name} must draw two cards!`);
         drawCards(nextPlayer, 2);
