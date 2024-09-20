@@ -1,5 +1,4 @@
 import { createGame, Game } from "./Game";
-import { questionInt } from "readline-sync";
 import { Player } from "./Player";
 
 const startGame = () => {
