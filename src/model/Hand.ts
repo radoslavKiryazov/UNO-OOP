@@ -6,7 +6,7 @@ import { questionInt, question } from "readline-sync";
 export type Hand = {
   readonly discardPile: Card[];
   readonly currentTurnIndex: number;
-  playCard: (card: Card, hand: Card[]) => void; //super messy, I shouldnt be passing the entire hand with a seperate card just to check and remove it TODO
+  playCard: (selectedCardIndex: number, hand: Card[]) => void; //super messy, I shouldnt be passing the entire hand with a seperate card just to check and remove it TODO
   drawCards: (player: Player, numberOfCards: number) => void;
   checkForUNO: (playerIndex: number) => void;
   nextTurn: () => void;
@@ -28,31 +28,39 @@ export const createHand = (players: Player[]): Hand => {
   let discardPile: Card[] = [deck.discardTopCard()];
   let currentTurnIndex: number = 0;
 
-  const playCard = async (selectedCard: Card, hand: Card[]) => {
+  const playCard = (selectedCardIndex: number, hand: Card[]) => {
     const player = players[currentTurnIndex]; // Get the current player
+    let selectedCard = hand[selectedCardIndex - 1]; // -1 because the index is 1 based
+    console.log("Selected card:", selectedCard);
 
     if (canPlayCard(selectedCard)) {
-      if (
-        selectedCard.type === "WILD" ||
-        selectedCard.type === "WILDDRAWFOUR"
-      ) {
+      player.hand = hand.filter((c) => c !== selectedCard); // the card is played, remove it from the hand
+
+      if (selectedCard.type === "WILD") {
         const newColour: Colour = selectColour();
         console.log(`You selected ${newColour}!`);
-        
-        player.hand = hand.filter((c) => c !== selectedCard);
+
         selectedCard = { ...selectedCard, colour: newColour };
-        discardPile.push(selectedCard);
-        
         currentTurnIndex = (currentTurnIndex + 1) % players.length;
+      }
+
+      if (selectedCard.type === "WILDDRAWFOUR") {
+        const newColour: Colour = selectColour();
+        console.log(`You selected ${newColour}!`);
+
+        const nextPlayer = players[currentTurnIndex + (1 % players.length)];
+        console.log(`${nextPlayer.name} must draw four cards!`);
+        drawCards(nextPlayer, 4);
+
+        console.log(`${nextPlayer.name}'s turn is skipped!`);
+        selectedCard = { ...selectedCard, colour: newColour };
+        currentTurnIndex = (currentTurnIndex + 2) % players.length;
       }
 
       if (selectedCard.type === "DRAWTWO") {
         console.log(`${player.name} played a Draw Two!`);
-        
-        player.hand = hand.filter((c) => c !== selectedCard);
-        discardPile.push(selectedCard);
 
-        const nextPlayer = players[currentTurnIndex + 1 % players.length] ;
+        const nextPlayer = players[currentTurnIndex + (1 % players.length)];
         currentTurnIndex = (currentTurnIndex + 2) % players.length;
 
         console.log(`${nextPlayer.name} must draw two cards!`);
@@ -60,28 +68,26 @@ export const createHand = (players: Player[]): Hand => {
         console.log(
           `${nextPlayer.name} has drawn two cards and their turn is skipped!`
         );
-
       }
       if (selectedCard.type === "SKIP") {
         console.log(`${player.name} played a Skip!`);
-
-        player.hand = hand.filter((c) => c !== selectedCard);
-        discardPile.push(selectedCard);
-
         currentTurnIndex = (currentTurnIndex + 2) % players.length;
       }
 
-      if(selectedCard.type === "REVERSE") {
-        discardPile.push(selectedCard);
-        player.hand = hand.filter((c) => c !== selectedCard);
-        //todo
+      if (selectedCard.type === "REVERSE") {
+        console.log("Card that was played:", cardPrinter(selectedCard));
+
+        players.reverse();
+        currentTurnIndex = (currentTurnIndex + 1) % players.length;
+        console.log("Order of play has been reversed!");
       }
-      if(selectedCard.type === "NUMBERED") {
-        discardPile.push(selectedCard);
-        player.hand = hand.filter((c) => c !== selectedCard);
+      if (selectedCard.type === "NUMBERED") {
         console.log("Card that was played:", cardPrinter(selectedCard));
         currentTurnIndex = (currentTurnIndex + 1) % players.length;
       }
+      discardPile.push(selectedCard);
+
+      console.clear();
       nextTurn();
     } else {
       console.log("Invalid card. Try again.");
@@ -92,13 +98,7 @@ export const createHand = (players: Player[]): Hand => {
     const player = players[playerIndex];
     const { hand } = player;
 
-    console.log(`${player.name}, it's your turn!\n`);
-
-    console.log(
-      `Top card on the discard pile: ${cardPrinter(
-        discardPile[discardPile.length - 1]
-      )}`
-    );
+    console.log(`\n${player.name}, it's your turn!`);
 
     printPlayersHand(hand);
 
@@ -108,8 +108,7 @@ export const createHand = (players: Player[]): Hand => {
     }
 
     let input = questionInt("Select a card index to play: ");
-    const card = hand[input - 1];
-    playCard(card, hand);
+    playCard(input, hand);
   };
 
   const drawCards = (player: Player, numberOfCards: number) => {
@@ -125,12 +124,18 @@ export const createHand = (players: Player[]): Hand => {
     const topCardFromDiscardPile = discardPile[discardPile.length - 1];
 
     return (
+      // match by color
       card.colour === topCardFromDiscardPile.colour ||
-      card.type === "WILD" ||
-      card.type === "WILDDRAWFOUR" ||
+      // match by number
       (card.type === "NUMBERED" &&
         topCardFromDiscardPile.type === "NUMBERED" &&
-        card.value === topCardFromDiscardPile.value)
+        card.value === topCardFromDiscardPile.value) ||
+      // match by action/symbol
+      (["REVERSE", "SKIP", "DRAWTWO"].includes(card.type) &&
+        card.type === topCardFromDiscardPile.type) ||
+      // wild and wild draw four can be played anytime
+      card.type === "WILD" ||
+      card.type === "WILDDRAWFOUR"
     );
   };
 
@@ -158,7 +163,7 @@ export const createHand = (players: Player[]): Hand => {
 
   //helpers
   const selectColour = () => {
-    console.log("Please choose a colour for the Wild Card!");
+    console.log("\nPlease choose a colour for the Wild Card!");
     console.log(`\x1b[31m [1] Red`);
     console.log("\x1b[34m [2] Blue");
     console.log("\x1b[32m [3] Green");
@@ -177,7 +182,8 @@ export const createHand = (players: Player[]): Hand => {
       case 4:
         return "Yellow";
       default:
-        return "Blue";``
+        return "Blue";
+        ``;
     }
   };
 
@@ -189,7 +195,7 @@ export const createHand = (players: Player[]): Hand => {
       question("Press Enter to draw a card...", { hideEchoBack: true });
       drawCards(player, 1);
       console.log(
-        `You drew: ${cardPrinter(player.hand[player.hand.length - 1])}`
+        `\nYou drew: ${cardPrinter(player.hand[player.hand.length - 1])}`
       );
 
       // check the new hand after drawing
@@ -200,7 +206,12 @@ export const createHand = (players: Player[]): Hand => {
   };
 
   const printPlayersHand = (hand: Card[]): void => {
-    console.log("Your hand: =>");
+    console.log(
+      `Top card on the discard pile: ${cardPrinter(
+        discardPile[discardPile.length - 1]
+      )}`
+    ); //print out the top card here so the player has a reference to what can be played
+    console.log(`\nYour hand [${hand.length}]: =>`);
     hand.forEach((card, index) => {
       console.log(cardPrinter(card, index + 1));
     });

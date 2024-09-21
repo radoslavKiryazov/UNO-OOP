@@ -2,42 +2,42 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals'
 import { createInitialDeck } from '../utils/test_adapter'
 import { standardShuffler } from '../../src/utils/random_utils'
 import { is } from '../utils/predicates'
-import * as deck from '../../src/model/Deck'
+import * as deck from '../../src/model/deck'
 import { memoizingShuffler } from '../utils/shuffling'
 
 describe("Initial deck", () => {
   const initialDeck = createInitialDeck()
   it("contains 19 numbered blue cards", () => {
     expect(
-      initialDeck.getCards()
+      initialDeck
       .filter(is({type: 'NUMBERED', color: 'BLUE'}))
-      .length)
+      .size)
     .toEqual(19)
   })
   it("contains 19 numbered green cards", () => {
     expect(
-      initialDeck.getCards()
+      initialDeck
       .filter(is({type: 'NUMBERED', color: 'GREEN'}))
-      .length)
+      .size)
     .toEqual(19)
   })
   it("contains 19 numbered red cards", () => {
     expect(
-      initialDeck.getCards()
+      initialDeck
       .filter(is({type: 'NUMBERED', color: 'RED'}))
-      .length)
+      .size)
     .toEqual(19)
   })
   it("contains 19 numbered yellow cards", () => {
     expect(
-      initialDeck.getCards()
+      initialDeck
       .filter(is({type: 'NUMBERED', color: 'YELLOW'}))
-      .length)
+      .size)
     .toEqual(19)
   })
   it("only contains numbered card with numbers between 0 and 9", () => {
-    const numberedDeck = initialDeck.getCards().filter(is({type: 'NUMBERED'}))
-    while(numberedDeck.length > 0) {
+    const numberedDeck = initialDeck.filter(is({type: 'NUMBERED'}))
+    while(numberedDeck.size > 0) {
       const n = (numberedDeck.deal() as {number: number}).number
       expect(n).toBeGreaterThanOrEqual(0)
       expect(n).toBeLessThan(10)
