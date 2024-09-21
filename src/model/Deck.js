@@ -3,6 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.createDeck = exports.colors = void 0;
 var random_utils_1 = require("../utils/random_utils");
 exports.colors = ["Red", "Blue", "Green", "Yellow"];
+/**
+ *   Create a new deck of UNO cards.
+ */
 var createDeck = function () {
     var preparedDeck = [];
     exports.colors.forEach(function (colour) {
@@ -51,11 +54,3 @@ var createDeck = function () {
     return { shuffle: shuffle, deal: deal, preparedDeck: preparedDeck, size: size, discardTopCard: discardTopCard };
 };
 exports.createDeck = createDeck;
-// const deck = createDeck();
-// console.log(deck.preparedDeck);
-// deck.shuffle();
-// console.log('shuffled ',deck.preparedDeck);
-// // cards to discard pile
-// const cardsDrawn = deck.deal(5);
-// console.log(deck.size())
-// console.log(cardsDrawn);

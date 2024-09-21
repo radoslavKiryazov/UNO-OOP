@@ -30,7 +30,7 @@ export const cardPrinter = (card: Card, index?: number): string => {
     Blue: "\x1b[34m", // Blue text
     Green: "\x1b[32m", // Green text
     Yellow: "\x1b[33m", // Yellow text
-    Wild: "\x1b[35m", // Purple for Wild
+    Wild: "\x1b[35m", // Purple color fo announcer
     None: "\x1b[37m", // White text for no color
   };
 

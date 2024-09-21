@@ -81,9 +81,6 @@ var createHand = function (players) {
                     discardPile.push(selectedCard);
                     nextPlayer = players[currentTurnIndex + 1 % players.length];
                     currentTurnIndex = (currentTurnIndex + 2) % players.length;
-                    console.log('currentTurnIndex', currentTurnIndex);
-                    console.log('currentPlayer', player);
-                    console.log('nextPlayer', nextPlayer);
                     console.log("".concat(nextPlayer.name, " must draw two cards!"));
                     drawCards(nextPlayer, 2);
                     console.log("".concat(nextPlayer.name, " has drawn two cards and their turn is skipped!"));
@@ -95,6 +92,8 @@ var createHand = function (players) {
                     currentTurnIndex = (currentTurnIndex + 2) % players.length;
                 }
                 if (selectedCard.type === "REVERSE") {
+                    discardPile.push(selectedCard);
+                    player.hand = hand.filter(function (c) { return c !== selectedCard; });
                     //todo
                 }
                 if (selectedCard.type === "NUMBERED") {
@@ -165,11 +164,11 @@ var createHand = function (players) {
     //helpers
     var selectColour = function () {
         console.log("Please choose a colour for the Wild Card!");
-        console.log("[1] Red");
-        console.log("[2] Blue");
-        console.log("[3] Green");
-        console.log("[4] Yellow");
-        var input = (0, readline_sync_1.questionInt)("Enter the number corresponding to your choice: ");
+        console.log("\u001B[31m [1] Red");
+        console.log("\x1b[34m [2] Blue");
+        console.log("\x1b[32m [3] Green");
+        console.log("\x1b[33m [4] Yellow");
+        var input = (0, readline_sync_1.questionInt)("\x1b[35m Enter the number corresponding to your choice: \x1b[37m");
         switch (input) {
             case 1:
                 return "Red";
@@ -181,15 +180,17 @@ var createHand = function (players) {
                 return "Yellow";
             default:
                 return "Blue";
+                "";
         }
     };
     var forceDrawUntilPlayable = function (hand, player) {
         var isPlayable = hand.some(function (card) { return canPlayCard(card); });
         while (!isPlayable) {
             console.log("".concat(player.name, ", no playable cards! You must draw a card."));
+            (0, readline_sync_1.question)("Press Enter to draw a card...", { hideEchoBack: true });
             drawCards(player, 1);
             console.log("You drew: ".concat((0, Card_1.cardPrinter)(player.hand[player.hand.length - 1])));
-            // Check the new hand after drawing
+            // check the new hand after drawing
             isPlayable = player.hand.some(function (card) { return canPlayCard(card); });
             printPlayersHand(hand);
         }

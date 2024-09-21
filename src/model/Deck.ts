@@ -3,16 +3,31 @@ import { announce, standardShuffler, delay } from "../utils/random_utils";
 
 export const colors: Array<Colour> = ["Red", "Blue", "Green", "Yellow"];
 export type Deck = {
+  /**
+   * The deck of cards. 
+  */
   readonly preparedDeck: Card[];
   /**
    * Shuffle the deck.
    */
   shuffle: () => void;
+  /**
+   * Deal a number of cards from the deck.
+   */
   deal: (numberOfCards: number) => Card[];
+  /**
+   * Get the number of cards in the deck.
+   */
   size: () => number;
+  /**
+   * Discard the top card from the deck.
+   */
   discardTopCard: () => Card;
 };
 
+  /**
+   *   Create a new deck of UNO cards.
+   */
 export const createDeck = (): Deck => {
   let preparedDeck: Card[] = [];
 
@@ -67,14 +82,3 @@ export const createDeck = (): Deck => {
 
   return { shuffle, deal, preparedDeck, size, discardTopCard };
 };
-
-// const deck = createDeck();
-// console.log(deck.preparedDeck);
-// deck.shuffle();
-// console.log('shuffled ',deck.preparedDeck);
-
-// // cards to discard pile
-// const cardsDrawn = deck.deal(5);
-// console.log(deck.size())
-
-// console.log(cardsDrawn);

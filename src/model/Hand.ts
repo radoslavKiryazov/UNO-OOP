@@ -1,7 +1,7 @@
 import { Card, cardPrinter, Colour } from "./Card";
 import { createDeck } from "./Deck";
 import { Player } from "./Player";
-import { questionInt } from "readline-sync";
+import { questionInt, question } from "readline-sync";
 
 export type Hand = {
   readonly discardPile: Card[];
@@ -55,10 +55,6 @@ export const createHand = (players: Player[]): Hand => {
         const nextPlayer = players[currentTurnIndex + 1 % players.length] ;
         currentTurnIndex = (currentTurnIndex + 2) % players.length;
 
-        console.log('currentTurnIndex', currentTurnIndex);
-        console.log('currentPlayer', player);
-        console.log('nextPlayer', nextPlayer);
-
         console.log(`${nextPlayer.name} must draw two cards!`);
         drawCards(nextPlayer, 2);
         console.log(
@@ -76,6 +72,8 @@ export const createHand = (players: Player[]): Hand => {
       }
 
       if(selectedCard.type === "REVERSE") {
+        discardPile.push(selectedCard);
+        player.hand = hand.filter((c) => c !== selectedCard);
         //todo
       }
       if(selectedCard.type === "NUMBERED") {
@@ -161,13 +159,13 @@ export const createHand = (players: Player[]): Hand => {
   //helpers
   const selectColour = () => {
     console.log("Please choose a colour for the Wild Card!");
-    console.log("[1] Red");
-    console.log("[2] Blue");
-    console.log("[3] Green");
-    console.log("[4] Yellow");
+    console.log(`\x1b[31m [1] Red`);
+    console.log("\x1b[34m [2] Blue");
+    console.log("\x1b[32m [3] Green");
+    console.log("\x1b[33m [4] Yellow");
 
     const input = questionInt(
-      "Enter the number corresponding to your choice: "
+      "\x1b[35m Enter the number corresponding to your choice: \x1b[37m"
     );
     switch (input) {
       case 1:
@@ -179,7 +177,7 @@ export const createHand = (players: Player[]): Hand => {
       case 4:
         return "Yellow";
       default:
-        return "Blue";
+        return "Blue";``
     }
   };
 
@@ -188,12 +186,13 @@ export const createHand = (players: Player[]): Hand => {
 
     while (!isPlayable) {
       console.log(`${player.name}, no playable cards! You must draw a card.`);
+      question("Press Enter to draw a card...", { hideEchoBack: true });
       drawCards(player, 1);
       console.log(
         `You drew: ${cardPrinter(player.hand[player.hand.length - 1])}`
       );
 
-      // Check the new hand after drawing
+      // check the new hand after drawing
       isPlayable = player.hand.some((card) => canPlayCard(card));
 
       printPlayersHand(hand);
