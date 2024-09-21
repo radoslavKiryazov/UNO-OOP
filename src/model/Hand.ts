@@ -8,7 +8,7 @@ export type Hand = {
   readonly currentTurnIndex: number;
   playCard: (selectedCardIndex: number, hand: Card[]) => void; //super messy, I shouldnt be passing the entire hand with a seperate card just to check and remove it TODO
   drawCards: (player: Player, numberOfCards: number) => void;
-  checkForUNO: (playerIndex: number) => void;
+  checkForUNO: (player: Player) => void;
   nextTurn: () => void;
   endHand: () => void;
   isHandOver: () => boolean;
@@ -22,10 +22,14 @@ export const createHand = (players: Player[]): Hand => {
   console.log("Dealing 7 cards to each player...\n");
 
   players.forEach((player) => {
-    player.hand = deck.deal(7);
+    player.hand = [
+      { type: "NUMBERED", colour: "Red", value: 1 },
+      { type: "NUMBERED", colour: "Red", value: 1 },
+    ]; //for testing
   });
 
-  let discardPile: Card[] = [deck.discardTopCard()];
+  // let discardPile: Card[] = [deck.discardTopCard()];
+  let discardPile: Card[] = [{ type: "NUMBERED", colour: "Red", value: 1 }]; //for testing
   let currentTurnIndex: number = 0;
 
   const playCard = (selectedCardIndex: number, hand: Card[]) => {
@@ -34,59 +38,69 @@ export const createHand = (players: Player[]): Hand => {
     console.log("Selected card:", selectedCard);
 
     if (canPlayCard(selectedCard)) {
-      player.hand = hand.filter((c) => c !== selectedCard); // the card is played, remove it from the hand
+      player.hand = hand.filter((c) => c !== selectedCard); // the card is surely playable, remove it from the hand
 
-      if (selectedCard.type === "WILD") {
-        const newColour: Colour = selectColour();
-        console.log(`You selected ${newColour}!`);
+      switch (selectedCard.type) {
+        case "NUMBERED": {
+          console.log("Card that was played:", cardPrinter(selectedCard));
+          currentTurnIndex = (currentTurnIndex + 1) % players.length;
+          break;
+        }
+        case "SKIP": {
+          console.log(`${player.name} played a Skip!`);
+          currentTurnIndex = (currentTurnIndex + 2) % players.length;
+        }
+        case "REVERSE": {
+          console.log("Card that was played:", cardPrinter(selectedCard));
 
-        selectedCard = { ...selectedCard, colour: newColour };
-        currentTurnIndex = (currentTurnIndex + 1) % players.length;
-      }
+          players.reverse();
+          currentTurnIndex = (currentTurnIndex + 1) % players.length;
+          console.log("Order of play has been reversed!");
+          break;
+        }
+        case "DRAWTWO": {
+          console.log(`${player.name} played a Draw Two!`);
 
-      if (selectedCard.type === "WILDDRAWFOUR") {
-        const newColour: Colour = selectColour();
-        console.log(`You selected ${newColour}!`);
+          const nextPlayer = players[(currentTurnIndex + 1) % players.length];
+          currentTurnIndex = (currentTurnIndex + 2) % players.length;
 
-        const nextPlayer = players[currentTurnIndex + (1 % players.length)];
-        console.log(`${nextPlayer.name} must draw four cards!`);
-        drawCards(nextPlayer, 4);
+          console.log(`${nextPlayer.name} must draw two cards!`);
+          drawCards(nextPlayer, 2);
+          console.log(`
+            ${nextPlayer.name} has drawn two cards and their turn is skipped!
+          `);
+          break;
+        }
+        case "WILD": {
+          const newColour: Colour = selectColour();
+          console.log(`You selected ${newColour}!`);
 
-        console.log(`${nextPlayer.name}'s turn is skipped!`);
-        selectedCard = { ...selectedCard, colour: newColour };
-        currentTurnIndex = (currentTurnIndex + 2) % players.length;
-      }
+          selectedCard = { ...selectedCard, colour: newColour };
+          currentTurnIndex = (currentTurnIndex + 1) % players.length;
+          break;
+        }
+        case "WILDDRAWFOUR": {
+          const newColour: Colour = selectColour();
+          console.log(`You selected ${newColour}!`);
 
-      if (selectedCard.type === "DRAWTWO") {
-        console.log(`${player.name} played a Draw Two!`);
+          const nextPlayer = players[(currentTurnIndex + 1) % players.length];
+          console.log(`${nextPlayer.name} must draw four cards!`);
+          drawCards(nextPlayer, 4);
 
-        const nextPlayer = players[currentTurnIndex + (1 % players.length)];
-        currentTurnIndex = (currentTurnIndex + 2) % players.length;
-
-        console.log(`${nextPlayer.name} must draw two cards!`);
-        drawCards(nextPlayer, 2);
-        console.log(
-          `${nextPlayer.name} has drawn two cards and their turn is skipped!`
-        );
-      }
-      if (selectedCard.type === "SKIP") {
-        console.log(`${player.name} played a Skip!`);
-        currentTurnIndex = (currentTurnIndex + 2) % players.length;
-      }
-
-      if (selectedCard.type === "REVERSE") {
-        console.log("Card that was played:", cardPrinter(selectedCard));
-
-        players.reverse();
-        currentTurnIndex = (currentTurnIndex + 1) % players.length;
-        console.log("Order of play has been reversed!");
-      }
-      if (selectedCard.type === "NUMBERED") {
-        console.log("Card that was played:", cardPrinter(selectedCard));
-        currentTurnIndex = (currentTurnIndex + 1) % players.length;
+          console.log(`${nextPlayer.name}'s turn is skipped!`);
+          selectedCard = { ...selectedCard, colour: newColour };
+          currentTurnIndex = (currentTurnIndex + 2) % players.length;
+          break;
+        }
       }
       discardPile.push(selectedCard);
 
+      checkForUNO(player);
+      if (isHandOver()) {
+        //placeholder
+        endHand();
+        return;
+      }
       console.clear();
       nextTurn();
     } else {
@@ -140,14 +154,39 @@ export const createHand = (players: Player[]): Hand => {
   };
 
   const nextTurn = () => {
-    //currentTurnIndex = (currentTurnIndex + 1) % players.length;
     selectCardToPlay(currentTurnIndex);
   };
 
-  const checkForUNO = (playerIndex: number) => {
-    const player = players[playerIndex];
-    if (player.hand.length === 1) {
-      console.log(`${player.name} calls UNO!`);
+  const checkForUNO = (player: Player) => {
+    if (player.hand.length !== 1) return; //evac
+
+    let duration = 5;
+    let calledUno = false;
+
+    const interval = setInterval(() => {
+      console.log(`UNO! ${duration} seconds remaining...`);
+      duration--;
+    }, 1000);
+
+    console.log("UNO!");
+
+    const unoPrompt = () => {
+      const input = question("Type 'UNO' and press Enter to call UNO: "); // AW FUCK OFF THIS SHIT IS BLOCKING
+      if (input.trim().toUpperCase() === "UNO") {
+        calledUno = true;
+        clearInterval(interval);
+        console.log(`${player.name} successfully called UNO!`);
+      }
+    };
+
+    unoPrompt();
+
+    if (!calledUno) {
+      clearInterval(interval);
+      console.log(`
+        ${player.name} failed to call UNO in time! Drawing 4 cards as a penalty.
+      `);
+      drawCards(player, 4);
     }
   };
 
@@ -183,7 +222,6 @@ export const createHand = (players: Player[]): Hand => {
         return "Yellow";
       default:
         return "Blue";
-        ``;
     }
   };
 
@@ -194,9 +232,9 @@ export const createHand = (players: Player[]): Hand => {
       console.log(`${player.name}, no playable cards! You must draw a card.`);
       question("Press Enter to draw a card...", { hideEchoBack: true });
       drawCards(player, 1);
-      console.log(
-        `\nYou drew: ${cardPrinter(player.hand[player.hand.length - 1])}`
-      );
+      console.log(`
+        \nYou drew: ${cardPrinter(player.hand[player.hand.length - 1])}
+      `);
 
       // check the new hand after drawing
       isPlayable = player.hand.some((card) => canPlayCard(card));
@@ -206,11 +244,10 @@ export const createHand = (players: Player[]): Hand => {
   };
 
   const printPlayersHand = (hand: Card[]): void => {
-    console.log(
-      `Top card on the discard pile: ${cardPrinter(
-        discardPile[discardPile.length - 1]
-      )}`
-    ); //print out the top card here so the player has a reference to what can be played
+    console.log(`Top card on the discard pile: ${cardPrinter(
+      discardPile[discardPile.length - 1]
+    )}
+    `); //print out the top card here so the player has a reference to what can be played
     console.log(`\nYour hand [${hand.length}]: =>`);
     hand.forEach((card, index) => {
       console.log(cardPrinter(card, index + 1));
