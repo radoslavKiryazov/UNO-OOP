@@ -21,24 +21,28 @@ export const createHand = (players: Player[]): Hand => {
 
   console.log("Dealing 7 cards to each player...\n");
 
+  //let discardPile: Card[] = [{ type: "NUMBERED", colour: "Red", value: 1 }];
+  // players.forEach((player) => {
+  //   player.hand = [
+  //     { type: "NUMBERED", colour: "Red", value: 1 },
+  //     { type: "NUMBERED", colour: "Red", value: 1 },
+  //   ]; //for testing
+  // });
   players.forEach((player) => {
-    player.hand = [
-      { type: "NUMBERED", colour: "Red", value: 1 },
-      { type: "NUMBERED", colour: "Red", value: 1 },
-    ]; //for testing
-  });
+    player.hand = deck.deal(7);
+  })
 
-  // let discardPile: Card[] = [deck.discardTopCard()];
-  let discardPile: Card[] = [{ type: "NUMBERED", colour: "Red", value: 1 }]; //for testing
+  let discardPile: Card[] = [deck.discardTopCard()];
   let currentTurnIndex: number = 0;
 
   const playCard = (selectedCardIndex: number, hand: Card[]) => {
-    const player = players[currentTurnIndex]; // Get the current player
+    const player = players[currentTurnIndex]; // get the current player
     let selectedCard = hand[selectedCardIndex - 1]; // -1 because the index is 1 based
     console.log("Selected card:", selectedCard);
 
     if (canPlayCard(selectedCard)) {
-      player.hand = hand.filter((c) => c !== selectedCard); // the card is surely playable, remove it from the hand
+      player.hand = hand.findIndex((c) => c === selectedCard) !== -1 ? hand.filter((c) => c !== selectedCard) : hand; // the card is surely playable, remove it from the hand
+      // player.hand = hand.filter((c) => c !== selectedCard); // the card is surely playable, remove it from the hand
 
       switch (selectedCard.type) {
         case "NUMBERED": {
