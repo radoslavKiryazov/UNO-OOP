@@ -19,25 +19,28 @@ var createHand = function (players) {
     //start the hand
     var deck = (0, Deck_1.createDeck)();
     deck.shuffle();
+    var discardPile = [];
+    var currentTopCard;
+    do {
+        currentTopCard = deck.deal(1)[0];
+        discardPile.push(currentTopCard);
+    } while (currentTopCard.type !== "NUMBERED");
+    console.log("discardPile", discardPile);
     console.log("Dealing 7 cards to each player...\n");
-    //let discardPile: Card[] = [{ type: "NUMBERED", colour: "Red", value: 1 }];
-    // players.forEach((player) => {
-    //   player.hand = [
-    //     { type: "NUMBERED", colour: "Red", value: 1 },
-    //     { type: "NUMBERED", colour: "Red", value: 1 },
-    //   ]; //for testing
-    // });
     players.forEach(function (player) {
         player.hand = deck.deal(7);
     });
-    var discardPile = [deck.discardTopCard()];
     var currentTurnIndex = 0;
-    var playCard = function (selectedCardIndex, hand) {
+    var playCard = function (selectedCardIndex) {
         var player = players[currentTurnIndex]; // get the current player
+        var hand = player.hand;
         var selectedCard = hand[selectedCardIndex - 1]; // -1 because the index is 1 based
         console.log("Selected card:", selectedCard);
         if (canPlayCard(selectedCard)) {
-            player.hand = hand.findIndex(function (c) { return c === selectedCard; }) !== -1 ? hand.filter(function (c) { return c !== selectedCard; }) : hand; // the card is surely playable, remove it from the hand
+            player.hand =
+                hand.findIndex(function (c) { return c === selectedCard; }) !== -1
+                    ? hand.filter(function (c) { return c !== selectedCard; })
+                    : hand; // the card is surely playable, remove it from the hand
             // player.hand = hand.filter((c) => c !== selectedCard); // the card is surely playable, remove it from the hand
             switch (selectedCard.type) {
                 case "NUMBERED": {
@@ -109,7 +112,7 @@ var createHand = function (players) {
             forceDrawUntilPlayable(hand, player);
         }
         var input = (0, readline_sync_1.questionInt)("Select a card index to play: ");
-        playCard(input, hand);
+        playCard(input);
     };
     var drawCards = function (player, numberOfCards) {
         for (var i = 0; i < numberOfCards; i++) {
@@ -204,6 +207,13 @@ var createHand = function (players) {
             isPlayable = player.hand.some(function (card) { return canPlayCard(card); });
             printPlayersHand(hand);
         }
+    };
+    var initializeDrawPile = function () {
+        var topCard;
+        do {
+            topCard = deck.deal(1)[0];
+        } while (topCard.type !== "NUMBERED");
+        discardPile.push(topCard);
     };
     var printPlayersHand = function (hand) {
         console.log("Top card on the discard pile: ".concat((0, Card_1.cardPrinter)(discardPile[discardPile.length - 1]), "\n    ")); //print out the top card here so the player has a reference to what can be played

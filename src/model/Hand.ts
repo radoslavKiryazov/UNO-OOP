@@ -6,7 +6,7 @@ import { questionInt, question } from "readline-sync";
 export type Hand = {
   readonly discardPile: Card[];
   readonly currentTurnIndex: number;
-  playCard: (selectedCardIndex: number, hand: Card[]) => void; //super messy, I shouldnt be passing the entire hand with a seperate card just to check and remove it TODO
+  playCard: (selectedCardIndex: number) => void; //super messy, I shouldnt be passing the entire hand with a seperate card just to check and remove it TODO
   drawCards: (player: Player, numberOfCards: number) => void;
   checkForUNO: (player: Player) => void;
   nextTurn: () => void;
@@ -19,30 +19,32 @@ export const createHand = (players: Player[]): Hand => {
   const deck = createDeck();
   deck.shuffle();
 
-  console.log("Dealing 7 cards to each player...\n");
+  let discardPile: Card[] = [];
+  let currentTopCard: Card;
 
-  //let discardPile: Card[] = [{ type: "NUMBERED", colour: "Red", value: 1 }];
-  // players.forEach((player) => {
-  //   player.hand = [
-  //     { type: "NUMBERED", colour: "Red", value: 1 },
-  //     { type: "NUMBERED", colour: "Red", value: 1 },
-  //   ]; //for testing
-  // });
+  do {
+    currentTopCard = deck.deal(1)[0];
+    discardPile.push(currentTopCard);
+  } while (currentTopCard.type !== "NUMBERED");
+
+  console.log("Dealing 7 cards to each player...\n");
   players.forEach((player) => {
     player.hand = deck.deal(7);
-  })
+  });
 
-  let discardPile: Card[] = [deck.discardTopCard()];
   let currentTurnIndex: number = 0;
 
-  const playCard = (selectedCardIndex: number, hand: Card[]) => {
+  const playCard = (selectedCardIndex: number) => {
     const player = players[currentTurnIndex]; // get the current player
+    const { hand } = player;
     let selectedCard = hand[selectedCardIndex - 1]; // -1 because the index is 1 based
     console.log("Selected card:", selectedCard);
 
     if (canPlayCard(selectedCard)) {
-      player.hand = hand.findIndex((c) => c === selectedCard) !== -1 ? hand.filter((c) => c !== selectedCard) : hand; // the card is surely playable, remove it from the hand
-      // player.hand = hand.filter((c) => c !== selectedCard); // the card is surely playable, remove it from the hand
+      player.hand =
+        hand.findIndex((c) => c === selectedCard) !== -1
+          ? hand.filter((c) => c !== selectedCard)
+          : hand;
 
       switch (selectedCard.type) {
         case "NUMBERED": {
@@ -126,7 +128,7 @@ export const createHand = (players: Player[]): Hand => {
     }
 
     let input = questionInt("Select a card index to play: ");
-    playCard(input, hand);
+    playCard(input);
   };
 
   const drawCards = (player: Player, numberOfCards: number) => {
@@ -245,6 +247,15 @@ export const createHand = (players: Player[]): Hand => {
 
       printPlayersHand(hand);
     }
+  };
+
+  const initializeDrawPile = () => {
+    let topCard: Card;
+    do {
+      topCard = deck.deal(1)[0];
+    } while (topCard.type !== "NUMBERED");
+
+    discardPile.push(topCard);
   };
 
   const printPlayersHand = (hand: Card[]): void => {

@@ -2,12 +2,15 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createGame = void 0;
 var Hand_1 = require("./Hand");
+var readline_sync_1 = require("readline-sync");
 var createGame = function (players, targetScore) {
     if (targetScore === void 0) { targetScore = 500; }
     var currentHand = null;
     var startNewHand = function () {
+        (0, readline_sync_1.question)("Press Enter to start a new hand...");
         console.log("\n--- A new hand begins! ---\n");
         currentHand = (0, Hand_1.createHand)(players);
+        currentHand.nextTurn(); // Start the first player's turn
     };
     var updateScores = function () {
         var handWinner = players.find(function (player) { return player.hand.length === 0; });
@@ -26,6 +29,20 @@ var createGame = function (players, targetScore) {
     var getWinner = function () {
         return players.find(function (player) { return player.score >= targetScore; }) || null;
     };
+    var playGame = function () {
+        console.log("\n--- The game begins! ---\n");
+        while (!isGameOver()) {
+            startNewHand();
+            while (!(currentHand === null || currentHand === void 0 ? void 0 : currentHand.isHandOver())) {
+                // Loop until the hand is over
+            }
+            updateScores();
+        }
+        var winner = getWinner();
+        if (winner) {
+            console.log("\n--- Game Over! ".concat(winner.name, " wins the game! ---\n"));
+        }
+    };
     var getCurrentHand = function () {
         return currentHand;
     };
@@ -37,6 +54,7 @@ var createGame = function (players, targetScore) {
         updateScores: updateScores,
         isGameOver: isGameOver,
         getWinner: getWinner,
+        playGame: playGame,
     };
 };
 exports.createGame = createGame;
@@ -49,7 +67,7 @@ var pointCalculator = function (players, winner) {
                     totalPoints += card.value || 0;
                 }
                 else {
-                    // Assign point values for special cards
+                    // assign point values for special cards
                     totalPoints +=
                         card.type === "WILD" || card.type === "WILDDRAWFOUR" ? 50 : 20;
                 }

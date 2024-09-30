@@ -1,6 +1,6 @@
-import { Player, createPlayer } from "./Player";
+import { Player } from "./Player";
 import { Hand, createHand } from "./Hand";
-import { delay } from "../utils/random_utils";
+import { question } from "readline-sync";
 
 export type Game = {
   players: Player[];
@@ -10,14 +10,18 @@ export type Game = {
   updateScores: () => void;
   isGameOver: () => boolean;
   getWinner: () => Player | null;
+  playGame: () => void;
 };
 
 export const createGame = (players: Player[], targetScore = 500): Game => {
   let currentHand: Hand | null = null;
 
   const startNewHand = (): void => {
+    question("Press Enter to start a new hand...");
+
     console.log("\n--- A new hand begins! ---\n");
     currentHand = createHand(players);
+    currentHand.nextTurn(); // Start the first player's turn
   };
 
   const updateScores = () => {
@@ -35,6 +39,7 @@ export const createGame = (players: Player[], targetScore = 500): Game => {
       );
     }
   };
+
   const isGameOver = (): boolean => {
     return players.some((player) => player.score >= targetScore);
   };
@@ -42,6 +47,24 @@ export const createGame = (players: Player[], targetScore = 500): Game => {
   const getWinner = (): Player | null => {
     return players.find((player) => player.score >= targetScore) || null;
   };
+
+  const playGame = (): void => {
+    console.log("\n--- The game begins! ---\n");
+
+    while (!isGameOver()) {
+      startNewHand();
+      while (!currentHand?.isHandOver()) {
+        // Loop until the hand is over
+      }
+      updateScores();
+    }
+
+    const winner = getWinner();
+    if (winner) {
+      console.log(`\n--- Game Over! ${winner.name} wins the game! ---\n`);
+    }
+  };
+
   const getCurrentHand = (): Hand | null => {
     return currentHand;
   };
@@ -54,6 +77,7 @@ export const createGame = (players: Player[], targetScore = 500): Game => {
     updateScores,
     isGameOver,
     getWinner,
+    playGame,
   };
 };
 
@@ -66,7 +90,7 @@ const pointCalculator = (players: Player[], winner: Player): number => {
         if (card.type === "NUMBERED") {
           totalPoints += card.value || 0;
         } else {
-          // Assign point values for special cards
+          // assign point values for special cards
           totalPoints +=
             card.type === "WILD" || card.type === "WILDDRAWFOUR" ? 50 : 20;
         }
