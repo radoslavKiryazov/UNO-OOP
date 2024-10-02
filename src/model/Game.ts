@@ -3,13 +3,21 @@ import { Hand, createHand } from "./Hand";
 import { question } from "readline-sync";
 
 export type Game = {
+  /** The Players*/
   players: Player[];
+  /** Gets the current hand*/
   getCurrentHand: () => Hand | null;
+  /** Target score needed to win the game */
   targetScore: number;
+  /** Start a new hand */
   startNewHand: () => void;
+  /** Updates the players' scores after each hand */
   updateScores: () => void;
+  /** Checks if the game is over based on the players' scores */
   isGameOver: () => boolean;
+  /** Returns the winner of the game */
   getWinner: () => Player | null;
+  /** Starts the game*/
   playGame: () => void;
 };
 
@@ -21,7 +29,7 @@ export const createGame = (players: Player[], targetScore = 500): Game => {
 
     console.log("\n--- A new hand begins! ---\n");
     currentHand = createHand(players);
-    currentHand.nextTurn(); // Start the first player's turn
+    currentHand.nextTurn();
   };
 
   const updateScores = () => {
@@ -53,9 +61,7 @@ export const createGame = (players: Player[], targetScore = 500): Game => {
 
     while (!isGameOver()) {
       startNewHand();
-      while (!currentHand?.isHandOver()) {
-        // Loop until the hand is over
-      }
+      while (!currentHand?.isHandOver()) {}
       updateScores();
     }
 
