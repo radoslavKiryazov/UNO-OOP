@@ -15,8 +15,10 @@ exports.createHand = void 0;
 var Card_1 = require("./Card");
 var Deck_1 = require("./Deck");
 var readline_sync_1 = require("readline-sync");
+/**
+ * Creates and initializes a new hand with the given players.
+ */
 var createHand = function (players) {
-    //start the hand
     var deck = (0, Deck_1.createDeck)();
     deck.shuffle();
     var discardPile = [];
@@ -25,7 +27,6 @@ var createHand = function (players) {
         currentTopCard = deck.deal(1)[0];
         discardPile.push(currentTopCard);
     } while (currentTopCard.type !== "NUMBERED");
-    console.log("discardPile", discardPile);
     console.log("Dealing 7 cards to each player...\n");
     players.forEach(function (player) {
         player.hand = deck.deal(7);
@@ -40,8 +41,7 @@ var createHand = function (players) {
             player.hand =
                 hand.findIndex(function (c) { return c === selectedCard; }) !== -1
                     ? hand.filter(function (c) { return c !== selectedCard; })
-                    : hand; // the card is surely playable, remove it from the hand
-            // player.hand = hand.filter((c) => c !== selectedCard); // the card is surely playable, remove it from the hand
+                    : hand;
             switch (selectedCard.type) {
                 case "NUMBERED": {
                     console.log("Card that was played:", (0, Card_1.cardPrinter)(selectedCard));
@@ -53,10 +53,9 @@ var createHand = function (players) {
                     currentTurnIndex = (currentTurnIndex + 2) % players.length;
                 }
                 case "REVERSE": {
-                    console.log("Card that was played:", (0, Card_1.cardPrinter)(selectedCard));
                     players.reverse();
-                    currentTurnIndex = (currentTurnIndex + 1) % players.length;
                     console.log("Order of play has been reversed!");
+                    currentTurnIndex = (currentTurnIndex + 1) % players.length;
                     break;
                 }
                 case "DRAWTWO": {
@@ -90,7 +89,6 @@ var createHand = function (players) {
             discardPile.push(selectedCard);
             checkForUNO(player);
             if (isHandOver()) {
-                //placeholder
                 endHand();
                 return;
             }
@@ -111,7 +109,13 @@ var createHand = function (players) {
         if (!isThereAPlayableCard) {
             forceDrawUntilPlayable(hand, player);
         }
-        var input = (0, readline_sync_1.questionInt)("Select a card index to play: ");
+        var input;
+        do {
+            input = (0, readline_sync_1.questionInt)("Select a card index to play (1-".concat(hand.length, "): "));
+            if (input < 1 || input > hand.length) {
+                console.log("\u001B[1mInvalid input. Please select a number between 1 and ".concat(hand.length, ".\u001B[0m"));
+            }
+        } while (input < 1 || input > hand.length);
         playCard(input);
     };
     var drawCards = function (player, numberOfCards) {
@@ -175,6 +179,7 @@ var createHand = function (players) {
     var isHandOver = function () {
         return players.some(function (player) { return player.hand.length === 0; });
     };
+    var handleCardEffects = function (card) { };
     //helpers
     var selectColour = function () {
         console.log("\nPlease choose a colour for the Wild Card!");
@@ -208,13 +213,6 @@ var createHand = function (players) {
             printPlayersHand(hand);
         }
     };
-    var initializeDrawPile = function () {
-        var topCard;
-        do {
-            topCard = deck.deal(1)[0];
-        } while (topCard.type !== "NUMBERED");
-        discardPile.push(topCard);
-    };
     var printPlayersHand = function (hand) {
         console.log("Top card on the discard pile: ".concat((0, Card_1.cardPrinter)(discardPile[discardPile.length - 1]), "\n    ")); //print out the top card here so the player has a reference to what can be played
         console.log("\nYour hand [".concat(hand.length, "]: =>"));
@@ -234,3 +232,4 @@ var createHand = function (players) {
     };
 };
 exports.createHand = createHand;
+//todo: fix the deck so that it doesn't run out of cards

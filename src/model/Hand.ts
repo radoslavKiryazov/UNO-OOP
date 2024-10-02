@@ -3,19 +3,35 @@ import { createDeck } from "./Deck";
 import { Player } from "./Player";
 import { questionInt, question } from "readline-sync";
 
-export type Hand = {
+export interface Hand {
+  /** The discard pile of played cards */
   readonly discardPile: Card[];
-  readonly currentTurnIndex: number;
-  playCard: (selectedCardIndex: number) => void; //super messy, I shouldnt be passing the entire hand with a seperate card just to check and remove it TODO
-  drawCards: (player: Player, numberOfCards: number) => void;
-  checkForUNO: (player: Player) => void;
-  nextTurn: () => void;
-  endHand: () => void;
-  isHandOver: () => boolean;
-};
 
+  /** Index of the current player's turn */
+  readonly currentTurnIndex: number;
+
+  /** Allows the current player to play a card by its index */
+  playCard: (selectedCardIndex: number) => void;
+
+  /** Allows a player to draw a specified number of cards */
+  drawCards: (player: Player, numberOfCards: number) => void;
+
+  /** Checks if a player has called "UNO" */
+  checkForUNO: (player: Player) => void;
+
+  /** Moves the turn to the next player */
+  nextTurn: () => void;
+
+  /** Ends the current hand*/
+  endHand: () => void;
+
+  /** Determines if the hand is over*/
+  isHandOver: () => boolean;
+}
+/**
+ * Creates and initializes a new hand with the given players.
+ */
 export const createHand = (players: Player[]): Hand => {
-  //start the hand
   const deck = createDeck();
   deck.shuffle();
 
@@ -38,7 +54,6 @@ export const createHand = (players: Player[]): Hand => {
     const player = players[currentTurnIndex]; // get the current player
     const { hand } = player;
     let selectedCard = hand[selectedCardIndex - 1]; // -1 because the index is 1 based
-    console.log("Selected card:", selectedCard);
 
     if (canPlayCard(selectedCard)) {
       player.hand =
@@ -57,11 +72,9 @@ export const createHand = (players: Player[]): Hand => {
           currentTurnIndex = (currentTurnIndex + 2) % players.length;
         }
         case "REVERSE": {
-          console.log("Card that was played:", cardPrinter(selectedCard));
-
           players.reverse();
-          currentTurnIndex = (currentTurnIndex + 1) % players.length;
           console.log("Order of play has been reversed!");
+          currentTurnIndex = (currentTurnIndex + 1) % players.length;
           break;
         }
         case "DRAWTWO": {
@@ -102,8 +115,8 @@ export const createHand = (players: Player[]): Hand => {
       discardPile.push(selectedCard);
 
       checkForUNO(player);
+
       if (isHandOver()) {
-        //placeholder
         endHand();
         return;
       }
@@ -127,7 +140,16 @@ export const createHand = (players: Player[]): Hand => {
       forceDrawUntilPlayable(hand, player);
     }
 
-    let input = questionInt("Select a card index to play: ");
+    let input: number;
+    do {
+      input = questionInt(`Select a card index to play (1-${hand.length}): `);
+
+      if (input < 1 || input > hand.length) {
+        console.log(
+          `\x1b[1mInvalid input. Please select a number between 1 and ${hand.length}.\x1b[0m`
+        );
+      }
+    } while (input < 1 || input > hand.length);
     playCard(input);
   };
 
@@ -206,6 +228,7 @@ export const createHand = (players: Player[]): Hand => {
     return players.some((player) => player.hand.length === 0);
   };
 
+  const handleCardEffects = (card: Card) => {};
   //helpers
   const selectColour = () => {
     console.log("\nPlease choose a colour for the Wild Card!");
@@ -249,15 +272,6 @@ export const createHand = (players: Player[]): Hand => {
     }
   };
 
-  const initializeDrawPile = () => {
-    let topCard: Card;
-    do {
-      topCard = deck.deal(1)[0];
-    } while (topCard.type !== "NUMBERED");
-
-    discardPile.push(topCard);
-  };
-
   const printPlayersHand = (hand: Card[]): void => {
     console.log(`Top card on the discard pile: ${cardPrinter(
       discardPile[discardPile.length - 1]
@@ -279,3 +293,5 @@ export const createHand = (players: Player[]): Hand => {
     isHandOver,
   };
 };
+
+//todo: fix the deck so that it doesn't run out of cards
