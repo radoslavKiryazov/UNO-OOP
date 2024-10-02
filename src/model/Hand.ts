@@ -155,9 +155,18 @@ export const createHand = (players: Player[]): Hand => {
 
   const drawCards = (player: Player, numberOfCards: number) => {
     for (let i = 0; i < numberOfCards; i++) {
-      const card = deck.deal(1)[0];
-      if (card) {
-        player.hand.push(card);
+      if (deck.size() === 0) {
+        const topCard = discardPile.pop();
+        deck.addCards(discardPile);
+
+        discardPile.length = 0;
+        if (topCard) discardPile.push(topCard);
+        deck.shuffle();
+
+        const card = deck.deal(1)[0];
+        if (card) {
+          player.hand.push(card);
+        }
       }
     }
   };
@@ -228,7 +237,6 @@ export const createHand = (players: Player[]): Hand => {
     return players.some((player) => player.hand.length === 0);
   };
 
-  const handleCardEffects = (card: Card) => {};
   //helpers
   const selectColour = () => {
     console.log("\nPlease choose a colour for the Wild Card!");
