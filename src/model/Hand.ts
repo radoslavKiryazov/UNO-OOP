@@ -72,9 +72,9 @@ export const createHand = (players: Player[]): Hand => {
           currentTurnIndex = (currentTurnIndex + 2) % players.length;
         }
         case "REVERSE": {
-          players.reverse();
+          // we have only two players so, reverse acts as a skip
           console.log("Order of play has been reversed!");
-          currentTurnIndex = (currentTurnIndex + 1) % players.length;
+          currentTurnIndex = (currentTurnIndex + 2) % players.length;
           break;
         }
         case "DRAWTWO": {
